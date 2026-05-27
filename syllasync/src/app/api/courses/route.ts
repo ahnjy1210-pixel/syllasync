@@ -39,7 +39,7 @@ export async function POST(req: Request) {
         name,
         description,
         inviteCode,
-        professorId: session.user.id
+        professorId: session.user.id as string
       }
     });
 

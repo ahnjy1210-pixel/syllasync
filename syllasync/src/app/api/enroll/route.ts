@@ -30,7 +30,7 @@ export async function POST(req: Request) {
     const existingEnrollment = await prisma.enrollment.findUnique({
       where: {
         userId_courseId: {
-          userId: session.user.id,
+          userId: session.user.id as string,
           courseId: course.id
         }
       }
@@ -42,7 +42,7 @@ export async function POST(req: Request) {
 
     const enrollment = await prisma.enrollment.create({
       data: {
-        userId: session.user.id,
+        userId: session.user.id as string,
         courseId: course.id
       }
     });

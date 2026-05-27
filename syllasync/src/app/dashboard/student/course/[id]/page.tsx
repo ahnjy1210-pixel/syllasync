@@ -18,7 +18,7 @@ export default async function StudentCourseDetailPage({ params }: { params: { id
   const enrollment = await prisma.enrollment.findUnique({
     where: {
       userId_courseId: {
-        userId: session.user.id,
+        userId: session.user.id as string,
         courseId: params.id
       }
     },
@@ -139,7 +139,7 @@ export default async function StudentCourseDetailPage({ params }: { params: { id
           <section className="lg:col-span-2">
             <CourseChat 
               courseId={course.id} 
-              currentUserId={session.user.id} 
+              currentUserId={session.user.id as string} 
               currentUserName={session.user.name || "Student"} 
               currentUserRole="STUDENT" 
             />

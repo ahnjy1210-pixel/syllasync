@@ -43,57 +43,57 @@ export default function PostHomeworkPage({ params }: { params: { id: string } })
   };
 
   return (
-    <div className="min-h-screen bg-neutral-950 text-neutral-100 p-8">
+    <div className="min-h-screen bg-st-light text-st-dark p-8">
       <div className="max-w-2xl mx-auto">
-        <Link href={`/dashboard/professor/course/${params.id}`} className="inline-flex items-center gap-2 text-neutral-400 hover:text-indigo-400 transition-colors mb-8 text-sm font-medium">
+        <Link href={`/dashboard/professor/course/${params.id}`} className="inline-flex items-center gap-2 text-gray-500 hover:text-st-purple transition-colors mb-8 text-sm font-medium">
           <ArrowLeft className="h-4 w-4" />
           Back to Course
         </Link>
 
-        <div className="bg-neutral-900 border border-neutral-800 rounded-3xl p-8 shadow-xl">
+        <div className="bg-white border border-gray-100 rounded-3xl p-8 shadow-xl">
           <div className="flex items-center gap-4 mb-8">
-            <div className="h-12 w-12 bg-gradient-to-tr from-violet-500 to-fuchsia-500 rounded-xl flex items-center justify-center">
-              <FileText className="text-white h-6 w-6" />
+            <div className="h-12 w-12 bg-st-purple/10 rounded-xl flex items-center justify-center">
+              <FileText className="text-st-purple h-6 w-6" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold">Post New Homework</h1>
-              <p className="text-neutral-400 text-sm">Assign a task to all enrolled students.</p>
+              <h1 className="text-2xl font-bold text-st-dark">Post New Homework</h1>
+              <p className="text-gray-500 text-sm">Assign a task to all enrolled students.</p>
             </div>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-neutral-300 ml-1">Homework Title</label>
+              <label className="text-sm font-medium text-gray-700 ml-1">Homework Title</label>
               <input
                 type="text"
                 required
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="w-full px-4 py-3 bg-neutral-950/50 border border-neutral-800 rounded-xl focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500 outline-none transition-all placeholder:text-neutral-600"
+                className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-st-purple/20 focus:border-st-purple outline-none transition-all placeholder:text-gray-400 text-st-dark"
                 placeholder="e.g. Chapter 4 Reading Reflection"
               />
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-neutral-300 ml-1">Description & Instructions</label>
+              <label className="text-sm font-medium text-gray-700 ml-1">Description & Instructions</label>
               <textarea
                 required
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 rows={5}
-                className="w-full px-4 py-3 bg-neutral-950/50 border border-neutral-800 rounded-xl focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500 outline-none transition-all placeholder:text-neutral-600 resize-none"
+                className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-st-purple/20 focus:border-st-purple outline-none transition-all placeholder:text-gray-400 text-st-dark resize-none"
                 placeholder="Write detailed instructions here..."
               />
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-neutral-300 ml-1">Due Date & Time</label>
+              <label className="text-sm font-medium text-gray-700 ml-1">Due Date & Time</label>
               <input
                 type="datetime-local"
                 required
                 value={dueDate}
                 onChange={(e) => setDueDate(e.target.value)}
-                className="w-full px-4 py-3 bg-neutral-950/50 border border-neutral-800 rounded-xl focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500 outline-none transition-all text-neutral-200"
+                className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-st-purple/20 focus:border-st-purple outline-none transition-all text-st-dark"
               />
             </div>
 
@@ -101,7 +101,7 @@ export default function PostHomeworkPage({ params }: { params: { id: string } })
               <button
                 type="submit"
                 disabled={isLoading}
-                className="bg-violet-600 hover:bg-violet-500 text-white px-6 py-3 rounded-xl font-medium transition-all shadow-lg shadow-violet-600/20 flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                className="bg-st-purple hover:bg-st-indigo text-white px-6 py-3 rounded-xl font-medium transition-all shadow-[0px_4px_20px_rgba(59,7,100,0.2)] flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
               >
                 {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
                 Post Assignment
