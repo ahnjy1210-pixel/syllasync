@@ -8,33 +8,35 @@ datasource db {
 }
 
 model User {
-  id           String    @id @default(cuid())
-  email        String    @unique
-  passwordHash String
-  name         String
-  role         String    // "PROFESSOR" or "STUDENT"
-  avatar       String?
-  coursesTaught Course[]  @relation("TaughtCourses")
+  id            String         @id @default(cuid())
+  email         String         @unique
+  passwordHash  String
+  name          String
+  role          String         // "PROFESSOR", "STUDENT", or "ADMIN"
+  avatar        String?
+  coursesTaught Course[]       @relation("TaughtCourses")
   enrollments   Enrollment[]
   messages      Message[]
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  notifications Notification[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
 }
 
 model Course {
-  id          String    @id @default(cuid())
-  name        String
-  description String?
-  professorId String
-  professor   User      @relation("TaughtCourses", fields: [professorId], references: [id])
-  inviteCode  String    @unique
-  syllabusUrl String?
-  lessons     Lesson[]
-  homeworks   Homework[]
-  enrollments Enrollment[]
-  messages    Message[]
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id            String         @id @default(cuid())
+  name          String
+  description   String?
+  professorId   String
+  professor     User           @relation("TaughtCourses", fields: [professorId], references: [id])
+  inviteCode    String         @unique
+  syllabusUrl   String?
+  lessons       Lesson[]
+  homeworks     Homework[]
+  enrollments   Enrollment[]
+  messages      Message[]
+  announcements Announcement[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
 }
 
 model Enrollment {
@@ -82,4 +84,24 @@ model Message {
   sender    User     @relation(fields: [senderId], references: [id])
   content   String
   timestamp DateTime @default(now())
+}
+
+model Announcement {
+  id        String   @id @default(cuid())
+  courseId  String
+  course    Course   @relation(fields: [courseId], references: [id])
+  title     String
+  content   String
+  createdAt DateTime @default(now())
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  title     String
+  body      String
+  isRead    Boolean  @default(false)
+  link      String?
+  createdAt DateTime @default(now())
 }

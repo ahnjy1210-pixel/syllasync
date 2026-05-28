@@ -26,8 +26,33 @@ export default function CourseChat({ courseId, currentUserId, currentUserName, c
   const [newMessage, setNewMessage] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Load message history from DB when courseId changes
   useEffect(() => {
-    // Initialize Socket.IO connection
+    const fetchMessages = async () => {
+      try {
+        const res = await fetch(`/api/courses/${courseId}/messages`);
+        if (res.ok) {
+          const data = await res.json();
+          const mapped = data.map((m: any) => ({
+            id: m.id,
+            senderId: m.senderId,
+            senderName: m.sender.name,
+            senderRole: m.sender.role,
+            content: m.content,
+            timestamp: m.timestamp,
+          }));
+          setMessages(mapped);
+        }
+      } catch (error) {
+        console.error("Failed to load message history:", error);
+      }
+    };
+
+    fetchMessages();
+  }, [courseId]);
+
+  // Set up socket connection
+  useEffect(() => {
     const newSocket = io();
     
     newSocket.on("connect", () => {
@@ -35,7 +60,12 @@ export default function CourseChat({ courseId, currentUserId, currentUserName, c
     });
 
     newSocket.on("receive_message", (message: Message) => {
-      setMessages((prev) => [...prev, message]);
+      setMessages((prev) => {
+        if (message.id && prev.some((m) => m.id === message.id)) {
+          return prev;
+        }
+        return [...prev, message];
+      });
     });
 
     setSocket(newSocket);
@@ -45,41 +75,60 @@ export default function CourseChat({ courseId, currentUserId, currentUserName, c
     };
   }, [courseId]);
 
+  // Scroll to bottom
   useEffect(() => {
-    // Scroll to bottom when new messages arrive
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const sendMessage = (e: React.FormEvent) => {
+  const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newMessage.trim() || !socket) return;
+    if (!newMessage.trim()) return;
 
-    const messageData: Message = {
-      senderId: currentUserId,
-      senderName: currentUserName,
-      senderRole: currentUserRole,
-      content: newMessage.trim(),
-      timestamp: new Date().toISOString(),
-    };
-
-    socket.emit("send_message", { ...messageData, courseId });
+    const messageText = newMessage.trim();
     setNewMessage("");
-    
-    // In a full implementation, you would also POST to /api/messages here
-    // to persist it in the Prisma database.
+
+    try {
+      const res = await fetch(`/api/courses/${courseId}/messages`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: messageText }),
+      });
+
+      if (res.ok) {
+        const savedMsg = await res.json();
+        if (socket) {
+          const messageData: Message = {
+            id: savedMsg.id,
+            senderId: currentUserId,
+            senderName: currentUserName,
+            senderRole: currentUserRole,
+            content: savedMsg.content,
+            timestamp: savedMsg.timestamp,
+          };
+          socket.emit("send_message", { ...messageData, courseId });
+        }
+      } else {
+        console.error("Failed to save message on server");
+      }
+    } catch (error) {
+      console.error("Error sending message:", error);
+    }
   };
 
   return (
-    <div className="flex flex-col h-[500px] bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden shadow-xl">
-      <div className="p-4 border-b border-neutral-800 bg-neutral-900/80 backdrop-blur flex items-center gap-2">
-        <MessageSquare className="h-5 w-5 text-indigo-400" />
-        <h3 className="font-semibold">Live Course Chat</h3>
+    <div className="flex flex-col h-[500px] bg-white border border-gray-100 rounded-3xl overflow-hidden shadow-sm">
+      {/* Header */}
+      <div className="p-4 border-b border-gray-100 bg-white/80 backdrop-blur flex items-center gap-2">
+        <MessageSquare className="h-5 w-5 text-st-purple" />
+        <h3 className="font-bold text-st-dark text-sm">Live Course Chat</h3>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50/50">
         {messages.length === 0 ? (
-          <div className="h-full flex items-center justify-center text-neutral-500 text-sm">
-            No messages yet. Be the first to say hello!
+          <div className="h-full flex flex-col items-center justify-center text-gray-400 text-sm">
+            <MessageSquare className="h-8 w-8 text-gray-200 mb-2" />
+            <p>No messages yet. Be the first to say hello!</p>
           </div>
         ) : (
           messages.map((msg, index) => {
@@ -87,20 +136,23 @@ export default function CourseChat({ courseId, currentUserId, currentUserName, c
             return (
               <div key={index} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
                 {!isMe && (
-                  <span className="text-xs text-neutral-400 mb-1 ml-1">
-                    {msg.senderName} {msg.senderRole === "PROFESSOR" && <span className="text-indigo-400 font-medium">(Professor)</span>}
+                  <span className="text-xs font-bold text-gray-500 mb-1 ml-1">
+                    {msg.senderName}{" "}
+                    {msg.senderRole === "PROFESSOR" && (
+                      <span className="text-st-purple font-extrabold">(Professor)</span>
+                    )}
                   </span>
                 )}
                 <div 
-                  className={`max-w-[80%] px-4 py-2 rounded-2xl ${
+                  className={`max-w-[80%] px-4 py-2.5 rounded-2xl shadow-sm text-sm ${
                     isMe 
-                      ? 'bg-indigo-600 text-white rounded-tr-none' 
-                      : 'bg-neutral-800 text-neutral-100 rounded-tl-none'
+                      ? 'bg-st-purple text-white rounded-tr-none' 
+                      : 'bg-white border border-gray-200/80 text-st-dark rounded-tl-none'
                   }`}
                 >
-                  <p className="text-sm">{msg.content}</p>
+                  <p className="leading-relaxed break-words">{msg.content}</p>
                 </div>
-                <span className="text-[10px] text-neutral-500 mt-1">
+                <span className="text-[10px] text-gray-400 mt-1 ml-1 mr-1">
                   {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </span>
               </div>
@@ -110,19 +162,20 @@ export default function CourseChat({ courseId, currentUserId, currentUserName, c
         <div ref={messagesEndRef} />
       </div>
 
-      <form onSubmit={sendMessage} className="p-4 border-t border-neutral-800 bg-neutral-950/50">
+      {/* Input */}
+      <form onSubmit={sendMessage} className="p-4 border-t border-gray-100 bg-white">
         <div className="flex gap-2">
           <input
             type="text"
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             placeholder="Type your message..."
-            className="flex-1 bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 outline-none transition-all placeholder:text-neutral-600"
+            className="flex-1 bg-white border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-st-purple/20 focus:border-st-purple outline-none transition-all placeholder:text-gray-400 text-st-dark"
           />
           <button 
             type="submit" 
             disabled={!newMessage.trim()}
-            className="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:hover:bg-indigo-600 text-white p-2.5 rounded-xl transition-colors"
+            className="bg-st-purple hover:bg-st-indigo disabled:opacity-50 text-white p-2.5 rounded-xl transition-all shadow-[0_4px_12px_rgba(59,7,100,0.15)] flex items-center justify-center shrink-0 cursor-pointer"
           >
             <Send className="h-5 w-5" />
           </button>

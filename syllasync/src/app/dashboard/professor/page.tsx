@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { PrismaClient } from "@prisma/client";
 import { Plus, BookOpen, Clock, Users, Send, Calendar, CheckCircle2, ChevronRight, GraduationCap } from "lucide-react";
 import Link from "next/link";
+import QuickBroadcastForm from "./QuickBroadcastForm";
 
 const prisma = new PrismaClient();
 
@@ -156,21 +157,7 @@ export default async function ProfessorDashboard() {
               <div className="absolute top-[-20%] right-[-10%] w-[60%] h-[60%] rounded-full bg-white/10 blur-[40px] pointer-events-none" />
               <h2 className="text-xl font-bold mb-2 relative z-10">Quick Broadcast</h2>
               <p className="text-st-purple-200 text-sm mb-4 text-white/70 relative z-10">Send an instant announcement to all your students.</p>
-              <div className="space-y-3 relative z-10">
-                <select className="w-full bg-black/20 border border-white/20 rounded-xl px-4 py-2.5 text-sm text-white outline-none focus:border-st-lime">
-                  <option value="" className="text-gray-900">Select Course</option>
-                  {courses.map(c => <option key={c.id} value={c.id} className="text-gray-900">{c.name}</option>)}
-                </select>
-                <textarea 
-                  rows={3} 
-                  placeholder="Type your message here..." 
-                  className="w-full bg-black/20 border border-white/20 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-st-lime placeholder:text-white/40 resize-none"
-                ></textarea>
-                <button className="w-full bg-st-lime text-st-indigo font-bold py-2.5 rounded-xl hover:brightness-95 transition-all flex items-center justify-center gap-2">
-                  <Send className="h-4 w-4" />
-                  Send Now
-                </button>
-              </div>
+              <QuickBroadcastForm courses={courses.map(c => ({ id: c.id, name: c.name }))} />
             </div>
 
             {/* Today's Schedule */}
