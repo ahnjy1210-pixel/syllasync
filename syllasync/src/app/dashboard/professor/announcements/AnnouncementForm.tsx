@@ -11,6 +11,8 @@ export default function AnnouncementForm({ courses }: { courses: Course[] }) {
   const [courseId, setCourseId] = useState("");
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  const [attachmentUrl, setAttachmentUrl] = useState("");
+  const [attachmentName, setAttachmentName] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -21,10 +23,17 @@ export default function AnnouncementForm({ courses }: { courses: Course[] }) {
       const res = await fetch("/api/announcements", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ courseId, title, content }),
+        body: JSON.stringify({ 
+          courseId, 
+          title, 
+          content, 
+          attachmentUrl: attachmentUrl.trim() || null, 
+          attachmentName: attachmentName.trim() || null 
+        }),
       });
       if (res.ok) {
         setTitle(""); setContent(""); setCourseId("");
+        setAttachmentUrl(""); setAttachmentName("");
         router.refresh();
       } else {
         const d = await res.json();
@@ -75,10 +84,36 @@ export default function AnnouncementForm({ courses }: { courses: Course[] }) {
         />
       </div>
 
+      <div className="border-t border-gray-100 pt-3 mt-1">
+        <div className="text-xs font-bold text-st-purple uppercase tracking-wider mb-2">Attach Document (Optional)</div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <label className="text-[10px] font-bold text-gray-400 uppercase">Document Name</label>
+            <input
+              type="text"
+              value={attachmentName}
+              onChange={(e) => setAttachmentName(e.target.value)}
+              placeholder="e.g. Syllabus PDF"
+              className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-st-purple/20 focus:border-st-purple outline-none text-xs text-st-dark placeholder:text-gray-400"
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="text-[10px] font-bold text-gray-400 uppercase">Document URL</label>
+            <input
+              type="url"
+              value={attachmentUrl}
+              onChange={(e) => setAttachmentUrl(e.target.value)}
+              placeholder="e.g. https://example.com/syllabus.pdf"
+              className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-st-purple/20 focus:border-st-purple outline-none text-xs text-st-dark placeholder:text-gray-400"
+            />
+          </div>
+        </div>
+      </div>
+
       <button
         type="submit"
         disabled={loading}
-        className="w-full flex items-center justify-center gap-2 bg-st-purple hover:bg-st-indigo text-white font-bold py-3 rounded-xl transition-all shadow-[0_4px_20px_rgba(59,7,100,0.2)] disabled:opacity-60"
+        className="w-full flex items-center justify-center gap-2 bg-st-purple hover:bg-st-indigo text-white font-bold py-3 rounded-xl transition-all shadow-[0_4px_20px_rgba(59,7,100,0.2)] disabled:opacity-60 cursor-pointer"
       >
         {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
         {loading ? "Sending…" : "Send to All Students"}

@@ -17,11 +17,38 @@ export default async function ProfessorDashboard() {
   const courses = await prisma.course.findMany({
     where: { professorId: session.user.id },
     include: {
+      homeworks: {
+        orderBy: { dueDate: "asc" },
+      },
       _count: {
         select: { enrollments: true, lessons: true, homeworks: true }
       }
     }
   });
+
+  // Extract and sort all homeworks from all courses
+  const allHomeworks = courses
+    .flatMap((c) =>
+      c.homeworks.map((hw) => ({
+        ...hw,
+        courseName: c.name,
+        enrollmentCount: c._count.enrollments,
+      }))
+    )
+    .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
+    .slice(0, 5); // Take top 5 soonest due
+
+  const getDueStatus = (dueDate: Date) => {
+    const diff = new Date(dueDate).getTime() - Date.now();
+    if (diff < 0) {
+      return { label: "Past Due", classes: "bg-red-100 text-red-800", dot: "bg-red-600" };
+    }
+    const hours = diff / (1000 * 60 * 60);
+    if (hours <= 24) {
+      return { label: "Due Soon", classes: "bg-yellow-100 text-yellow-800", dot: "bg-yellow-600" };
+    }
+    return { label: "Upcoming", classes: "bg-blue-100 text-blue-800", dot: "bg-blue-600" };
+  };
 
   return (
     <div className="min-h-screen bg-st-light font-sans selection:bg-st-lime/30">
@@ -111,41 +138,42 @@ export default async function ProfessorDashboard() {
             <section>
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-bold text-st-dark">Assignment Tracker</h2>
-                <Link href="#" className="text-sm font-bold text-st-purple hover:underline">View All</Link>
+                <Link href="/dashboard/professor/homework" className="text-sm font-bold text-st-purple hover:underline">View All</Link>
               </div>
               <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="bg-gray-50 border-b border-gray-100">
-                      <th className="py-4 px-6 text-xs font-bold text-gray-400 uppercase tracking-wider">Assignment</th>
-                      <th className="py-4 px-6 text-xs font-bold text-gray-400 uppercase tracking-wider">Course</th>
-                      <th className="py-4 px-6 text-xs font-bold text-gray-400 uppercase tracking-wider">Submitted</th>
-                      <th className="py-4 px-6 text-xs font-bold text-gray-400 uppercase tracking-wider text-right">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100">
-                    <tr className="hover:bg-gray-50/50">
-                      <td className="py-4 px-6 font-medium text-st-dark">Midterm Essay Draft</td>
-                      <td className="py-4 px-6 text-sm text-gray-500">ENG205</td>
-                      <td className="py-4 px-6 text-sm text-gray-500">24/30</td>
-                      <td className="py-4 px-6 text-right">
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-yellow-100 text-yellow-800 text-xs font-bold rounded-full">
-                          <span className="w-1.5 h-1.5 rounded-full bg-yellow-600"></span> Due Tomorrow
-                        </span>
-                      </td>
-                    </tr>
-                    <tr className="hover:bg-gray-50/50">
-                      <td className="py-4 px-6 font-medium text-st-dark">Programming Lab 3</td>
-                      <td className="py-4 px-6 text-sm text-gray-500">CS101</td>
-                      <td className="py-4 px-6 text-sm text-gray-500">45/45</td>
-                      <td className="py-4 px-6 text-right">
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-green-100 text-green-800 text-xs font-bold rounded-full">
-                          <CheckCircle2 className="w-3 h-3" /> Needs Grading
-                        </span>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
+                {allHomeworks.length === 0 ? (
+                  <div className="p-8 text-center text-gray-400 text-sm">
+                    No active assignments.
+                  </div>
+                ) : (
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="bg-gray-50 border-b border-gray-100">
+                        <th className="py-4 px-6 text-xs font-bold text-gray-400 uppercase tracking-wider">Assignment</th>
+                        <th className="py-4 px-6 text-xs font-bold text-gray-400 uppercase tracking-wider">Course</th>
+                        <th className="py-4 px-6 text-xs font-bold text-gray-400 uppercase tracking-wider">Submitted</th>
+                        <th className="py-4 px-6 text-xs font-bold text-gray-400 uppercase tracking-wider text-right">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {allHomeworks.map((hw) => {
+                        const status = getDueStatus(hw.dueDate);
+                        return (
+                          <tr key={hw.id} className="hover:bg-gray-50/50">
+                            <td className="py-4 px-6 font-medium text-st-dark">{hw.title}</td>
+                            <td className="py-4 px-6 text-sm text-gray-500">{hw.courseName}</td>
+                            <td className="py-4 px-6 text-sm text-gray-500">0/{hw.enrollmentCount}</td>
+                            <td className="py-4 px-6 text-right">
+                              <span className={`inline-flex items-center gap-1.5 px-3 py-1 ${status.classes} text-xs font-bold rounded-full`}>
+                                <span className={`w-1.5 h-1.5 rounded-full ${status.dot}`}></span> {status.label}
+                              </span>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                )}
               </div>
             </section>
           </div>

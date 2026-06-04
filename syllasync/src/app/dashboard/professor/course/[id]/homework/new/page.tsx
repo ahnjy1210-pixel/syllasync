@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, use } from "react";
 import { useRouter } from "next/navigation";
 import { FileText, ArrowLeft, Loader2 } from "lucide-react";
 import Link from "next/link";
 
-export default function PostHomeworkPage({ params }: { params: { id: string } }) {
+export default function PostHomeworkPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
+  const { id: courseId } = use(params);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [dueDate, setDueDate] = useState("");
@@ -21,7 +22,7 @@ export default function PostHomeworkPage({ params }: { params: { id: string } })
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
-          courseId: params.id, 
+          courseId: courseId, 
           title, 
           description, 
           dueDate: new Date(dueDate).toISOString() 
@@ -29,7 +30,7 @@ export default function PostHomeworkPage({ params }: { params: { id: string } })
       });
 
       if (res.ok) {
-        router.push(`/dashboard/professor/course/${params.id}`);
+        router.push(`/dashboard/professor/course/${courseId}`);
         router.refresh();
       } else {
         const data = await res.json();
@@ -45,7 +46,7 @@ export default function PostHomeworkPage({ params }: { params: { id: string } })
   return (
     <div className="min-h-screen bg-st-light text-st-dark p-8">
       <div className="max-w-2xl mx-auto">
-        <Link href={`/dashboard/professor/course/${params.id}`} className="inline-flex items-center gap-2 text-gray-500 hover:text-st-purple transition-colors mb-8 text-sm font-medium">
+        <Link href={`/dashboard/professor/course/${courseId}`} className="inline-flex items-center gap-2 text-gray-500 hover:text-st-purple transition-colors mb-8 text-sm font-medium">
           <ArrowLeft className="h-4 w-4" />
           Back to Course
         </Link>

@@ -22,7 +22,7 @@ export async function POST(req: Request) {
   if (!session?.user || (session.user as any).role !== "PROFESSOR") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  const { courseId, title, content } = await req.json();
+  const { courseId, title, content, attachmentUrl, attachmentName } = await req.json();
   if (!courseId || !title || !content) {
     return NextResponse.json({ error: "All fields are required" }, { status: 400 });
   }
@@ -32,7 +32,13 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Not authorized for this course" }, { status: 403 });
   }
   const announcement = await prisma.announcement.create({
-    data: { courseId, title, content },
+    data: { 
+      courseId, 
+      title, 
+      content,
+      attachmentUrl: attachmentUrl || null,
+      attachmentName: attachmentName || null
+    },
   });
   return NextResponse.json(announcement, { status: 201 });
 }

@@ -30,7 +30,7 @@ export async function GET() {
 }
 
 
-export async function PUT() {
+export async function PUT(req: Request) {
   try {
     const session = await auth();
 
@@ -43,18 +43,39 @@ export async function PUT() {
       return NextResponse.json({ error: "User ID not found in session" }, { status: 400 });
     }
 
-    // Mark all notifications for this user as read
-    await prisma.notification.updateMany({
-      where: {
-        userId: userId,
-        isRead: false,
-      },
-      data: {
-        isRead: true,
-      },
-    });
+    let id: string | undefined;
+    try {
+      const body = await req.json();
+      id = body?.id;
+    } catch {
+      // Body might be empty (e.g. mark all as read)
+    }
 
-    return NextResponse.json({ message: "All notifications marked as read" }, { status: 200 });
+    if (id) {
+      // Mark specific notification as read
+      await prisma.notification.update({
+        where: {
+          id: id,
+          userId: userId, // Ensure ownership
+        },
+        data: {
+          isRead: true,
+        },
+      });
+      return NextResponse.json({ message: "Notification marked as read" }, { status: 200 });
+    } else {
+      // Mark all notifications for this user as read
+      await prisma.notification.updateMany({
+        where: {
+          userId: userId,
+          isRead: false,
+        },
+        data: {
+          isRead: true,
+        },
+      });
+      return NextResponse.json({ message: "All notifications marked as read" }, { status: 200 });
+    }
   } catch (error) {
     console.error("Notifications update error:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

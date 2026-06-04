@@ -51,6 +51,16 @@ export async function GET(
             avatar: true,
           },
         },
+        views: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true
+              }
+            }
+          }
+        }
       },
       orderBy: { timestamp: "asc" },
     });
@@ -78,16 +88,18 @@ export async function POST(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const { content } = await req.json();
-    if (!content || !content.trim()) {
-      return NextResponse.json({ error: "Message content is required" }, { status: 400 });
+    const { content, attachmentUrl, attachmentName } = await req.json();
+    if ((!content || !content.trim()) && !attachmentUrl) {
+      return NextResponse.json({ error: "Message content or attachment is required" }, { status: 400 });
     }
 
     const message = await prisma.message.create({
       data: {
         courseId,
         senderId: session.user.id,
-        content: content.trim(),
+        content: content?.trim() || "",
+        attachmentUrl: attachmentUrl || null,
+        attachmentName: attachmentName || null
       },
       include: {
         sender: {
@@ -98,6 +110,16 @@ export async function POST(
             avatar: true,
           },
         },
+        views: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true
+              }
+            }
+          }
+        }
       },
     });
 

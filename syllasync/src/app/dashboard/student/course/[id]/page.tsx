@@ -1,25 +1,27 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { PrismaClient } from "@prisma/client";
-import { BookOpen, ArrowLeft, Clock, FileText, Download } from "lucide-react";
+import { ArrowLeft, Download } from "lucide-react";
 import Link from "next/link";
-import CourseChat from "@/app/components/CourseChat";
+import StudentCourseTabs from "@/app/components/StudentCourseTabs";
 
 const prisma = new PrismaClient();
 
-export default async function StudentCourseDetailPage({ params }: { params: { id: string } }) {
+export default async function StudentCourseDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
 
   if (!session?.user || (session.user as any).role !== "STUDENT") {
     redirect("/login");
   }
 
+  const { id: courseId } = await params;
+
   // Verify enrollment and fetch course details
   const enrollment = await prisma.enrollment.findUnique({
     where: {
       userId_courseId: {
         userId: session.user.id as string,
-        courseId: params.id
+        courseId: courseId
       }
     },
     include: {
@@ -27,7 +29,8 @@ export default async function StudentCourseDetailPage({ params }: { params: { id
         include: {
           professor: { select: { name: true, email: true } },
           lessons: { orderBy: { startTime: 'asc' } },
-          homeworks: { orderBy: { dueDate: 'asc' } }
+          homeworks: { orderBy: { dueDate: 'asc' } },
+          announcements: { orderBy: { createdAt: 'desc' } }
         }
       }
     }
@@ -38,6 +41,51 @@ export default async function StudentCourseDetailPage({ params }: { params: { id
   }
 
   const { course } = enrollment;
+
+  // Map database model types to serializable properties for client component
+  const serializedLessons = course.lessons.map(l => ({
+    id: l.id,
+    title: l.title,
+    startTime: l.startTime.toISOString(),
+    endTime: l.endTime.toISOString(),
+    room: l.room,
+    notes: l.notes,
+    isCancelled: l.isCancelled
+  }));
+
+  const serializedHomeworks = course.homeworks.map(h => ({
+    id: h.id,
+    title: h.title,
+    description: h.description,
+    dueDate: h.dueDate.toISOString()
+  }));
+
+  const submissions = await prisma.submission.findMany({
+    where: {
+      studentId: session.user.id,
+      homework: { courseId }
+    }
+  });
+
+  const serializedSubmissions = submissions.map(s => ({
+    id: s.id,
+    homeworkId: s.homeworkId,
+    content: s.content,
+    fileUrl: s.fileUrl,
+    fileName: s.fileName,
+    grade: s.grade,
+    feedback: s.feedback,
+    submittedAt: s.submittedAt.toISOString()
+  }));
+
+  const serializedAnnouncements = course.announcements.map(a => ({
+    id: a.id,
+    title: a.title,
+    content: a.content,
+    attachmentUrl: a.attachmentUrl,
+    attachmentName: a.attachmentName,
+    createdAt: a.createdAt.toISOString()
+  }));
 
   return (
     <div className="min-h-screen bg-neutral-950 text-neutral-100 p-8">
@@ -61,92 +109,40 @@ export default async function StudentCourseDetailPage({ params }: { params: { id
             </div>
             
             <div className="flex gap-3">
-              <button className="flex items-center gap-2 bg-neutral-800 hover:bg-neutral-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition-colors border border-neutral-700">
-                <Download className="h-4 w-4" />
-                Syllabus PDF
-              </button>
+              {course.syllabusUrl ? (
+                <a
+                  href={course.syllabusUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-neutral-950 px-4 py-2.5 rounded-xl text-sm font-bold transition-all shadow-md"
+                >
+                  <Download className="h-4 w-4" />
+                  Syllabus PDF
+                </a>
+              ) : (
+                <button
+                  disabled
+                  className="flex items-center gap-2 bg-neutral-800 text-neutral-500 px-4 py-2.5 rounded-xl text-sm font-medium border border-neutral-700 cursor-not-allowed"
+                >
+                  Syllabus not uploaded
+                </button>
+              )}
             </div>
           </div>
         </div>
 
-        {/* Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          
-          {/* Lessons Section */}
-          <section>
-            <h2 className="text-xl font-semibold flex items-center gap-2 mb-4">
-              <Clock className="h-5 w-5 text-indigo-400" />
-              Class Schedule & Notes
-            </h2>
-            
-            <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6">
-              {course.lessons.length === 0 ? (
-                <p className="text-neutral-500 text-center py-4">No lessons scheduled yet.</p>
-              ) : (
-                <div className="space-y-4">
-                  {course.lessons.map(lesson => (
-                    <div key={lesson.id} className="flex justify-between items-center p-4 border border-neutral-800 rounded-xl bg-neutral-950/50">
-                      <div>
-                        <h4 className={`font-medium ${lesson.isCancelled ? 'text-neutral-500 line-through' : 'text-neutral-200'}`}>
-                          {lesson.title}
-                        </h4>
-                        <p className="text-xs text-neutral-500 mt-1">
-                          {new Date(lesson.startTime).toLocaleString()} - {lesson.room || "TBA"}
-                        </p>
-                      </div>
-                      <button className="text-xs font-medium text-indigo-400 hover:text-indigo-300 px-3 py-1.5 bg-indigo-500/10 rounded-lg">
-                        View Notes
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </section>
-
-          {/* Homework Section */}
-          <section>
-            <h2 className="text-xl font-semibold flex items-center gap-2 mb-4">
-              <FileText className="h-5 w-5 text-orange-400" />
-              Homework Feed
-            </h2>
-            
-            <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6">
-              {course.homeworks.length === 0 ? (
-                <p className="text-neutral-500 text-center py-4">No homework assigned yet.</p>
-              ) : (
-                <div className="space-y-4">
-                  {course.homeworks.map(hw => (
-                    <div key={hw.id} className="p-4 border border-neutral-800 rounded-xl bg-neutral-950/50">
-                      <div className="flex justify-between items-start mb-2">
-                        <h4 className="font-medium text-neutral-200">{hw.title}</h4>
-                        <span className="text-xs text-orange-400/80 font-medium px-2 py-1 bg-orange-500/10 rounded-md">
-                          Due: {new Date(hw.dueDate).toLocaleDateString()}
-                        </span>
-                      </div>
-                      <p className="text-sm text-neutral-400 line-clamp-2 mb-3">{hw.description}</p>
-                      <button className="text-xs font-medium text-neutral-300 hover:text-white transition-colors">
-                        Read full description &rarr;
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </section>
-
-          {/* Chat Section */}
-          <section className="lg:col-span-2">
-            <CourseChat 
-              courseId={course.id} 
-              currentUserId={session.user.id as string} 
-              currentUserName={session.user.name || "Student"} 
-              currentUserRole="STUDENT" 
-            />
-          </section>
-
-        </div>
+        {/* Tabbed Content */}
+        <StudentCourseTabs
+          courseId={course.id}
+          currentUserId={session.user.id as string}
+          currentUserName={session.user.name || "Student"}
+          lessons={serializedLessons}
+          homeworks={serializedHomeworks}
+          announcements={serializedAnnouncements}
+          initialSubmissions={serializedSubmissions}
+        />
       </div>
     </div>
   );
 }
+

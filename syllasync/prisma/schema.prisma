@@ -8,19 +8,22 @@ datasource db {
 }
 
 model User {
-  id            String         @id @default(cuid())
-  email         String         @unique
-  passwordHash  String
-  name          String
-  role          String         // "PROFESSOR", "STUDENT", or "ADMIN"
-  isActive      Boolean        @default(true)
-  avatar        String?
-  coursesTaught Course[]       @relation("TaughtCourses")
-  enrollments   Enrollment[]
-  messages      Message[]
-  notifications Notification[]
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  id                String             @id @default(cuid())
+  email             String             @unique
+  passwordHash      String
+  name              String
+  role              String             // "PROFESSOR", "STUDENT", or "ADMIN"
+  isActive          Boolean            @default(true)
+  avatar            String?
+  coursesTaught     Course[]           @relation("TaughtCourses")
+  enrollments       Enrollment[]
+  messages          Message[]
+  notifications     Notification[]
+  submissions       Submission[]
+  messageViews      MessageView[]
+  announcementViews AnnouncementView[]
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
 }
 
 model Course {
@@ -67,34 +70,41 @@ model Lesson {
 }
 
 model Homework {
-  id          String   @id @default(cuid())
+  id          String       @id @default(cuid())
   courseId    String
-  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  course      Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
   title       String
   description String?
   dueDate     DateTime
   fileUrl     String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  submissions Submission[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
 }
 
 model Message {
-  id        String   @id @default(cuid())
-  courseId  String
-  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  senderId  String
-  sender    User     @relation(fields: [senderId], references: [id], onDelete: Cascade)
-  content   String
-  timestamp DateTime @default(now())
+  id             String        @id @default(cuid())
+  courseId       String
+  course         Course        @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  senderId       String
+  sender         User          @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  content        String
+  attachmentUrl  String?
+  attachmentName String?
+  views          MessageView[]
+  timestamp      DateTime      @default(now())
 }
 
 model Announcement {
-  id        String   @id @default(cuid())
-  courseId  String
-  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  title     String
-  content   String
-  createdAt DateTime @default(now())
+  id             String             @id @default(cuid())
+  courseId       String
+  course         Course             @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  title          String
+  content        String
+  attachmentUrl  String?
+  attachmentName String?
+  views          AnnouncementView[]
+  createdAt      DateTime           @default(now())
 }
 
 model Notification {
@@ -106,4 +116,43 @@ model Notification {
   isRead    Boolean  @default(false)
   link      String?
   createdAt DateTime @default(now())
+}
+
+model Submission {
+  id          String    @id @default(cuid())
+  homeworkId  String
+  homework    Homework  @relation(fields: [homeworkId], references: [id], onDelete: Cascade)
+  studentId   String
+  student     User      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  content     String?
+  fileUrl     String?
+  fileName    String?
+  grade       String?
+  feedback    String?
+  submittedAt DateTime  @default(now())
+  gradedAt    DateTime? @updatedAt
+
+  @@unique([homeworkId, studentId])
+}
+
+model MessageView {
+  id        String   @id @default(cuid())
+  messageId String
+  message   Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  viewedAt  DateTime @default(now())
+
+  @@unique([messageId, userId])
+}
+
+model AnnouncementView {
+  id             String       @id @default(cuid())
+  announcementId String
+  announcement   Announcement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  viewedAt       DateTime     @default(now())
+
+  @@unique([announcementId, userId])
 }

@@ -1,8 +1,9 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { PrismaClient } from "@prisma/client";
-import { Bell, CheckCheck, Mail, MailOpen } from "lucide-react";
+import { Bell } from "lucide-react";
 import NotificationActions from "./NotificationActions";
+import NotificationsList from "./NotificationsList";
 
 const prisma = new PrismaClient();
 
@@ -16,6 +17,15 @@ export default async function NotificationsPage() {
   });
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
+
+  const serializedNotifications = notifications.map(n => ({
+    id: n.id,
+    title: n.title,
+    body: n.body,
+    isRead: n.isRead,
+    createdAt: n.createdAt.toISOString(),
+    link: n.link
+  }));
 
   return (
     <div className="p-6 md:p-8 max-w-3xl mx-auto">
@@ -37,43 +47,7 @@ export default async function NotificationsPage() {
       </div>
 
       {/* Notifications list */}
-      <div className="space-y-3">
-        {notifications.length === 0 ? (
-          <div className="bg-white rounded-3xl border border-gray-100 p-12 text-center">
-            <Bell className="h-10 w-10 text-gray-200 mx-auto mb-3" />
-            <p className="text-gray-400 text-sm">No notifications yet.</p>
-          </div>
-        ) : (
-          notifications.map((n) => (
-            <div
-              key={n.id}
-              className={`bg-white rounded-2xl border p-5 transition-all ${
-                n.isRead
-                  ? "border-gray-100"
-                  : "border-st-purple/20 shadow-sm bg-st-purple/[0.02]"
-              }`}
-            >
-              <div className="flex items-start gap-4">
-                <div className={`h-10 w-10 rounded-full flex items-center justify-center shrink-0 ${
-                  n.isRead ? "bg-gray-100 text-gray-400" : "bg-st-lime text-st-indigo"
-                }`}>
-                  {n.isRead ? <MailOpen className="h-5 w-5" /> : <Mail className="h-5 w-5" />}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className={`text-sm font-bold mb-0.5 ${n.isRead ? "text-gray-600" : "text-st-dark"}`}>
-                    {n.title}
-                  </h3>
-                  <p className="text-sm text-gray-500 leading-relaxed">{n.body}</p>
-                  <p className="text-xs text-gray-400 mt-2">{new Date(n.createdAt).toLocaleString()}</p>
-                </div>
-                {!n.isRead && (
-                  <span className="w-2.5 h-2.5 rounded-full bg-st-purple shrink-0 mt-1.5" />
-                )}
-              </div>
-            </div>
-          ))
-        )}
-      </div>
+      <NotificationsList initialNotifications={serializedNotifications} />
     </div>
   );
 }

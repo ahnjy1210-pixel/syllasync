@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { GraduationCap, LayoutDashboard, Megaphone, MessageSquare, Bell, Settings, LogOut, Menu, X } from "lucide-react";
+import { GraduationCap, LayoutDashboard, Megaphone, MessageSquare, Bell, Settings, LogOut, Menu, X, FileText } from "lucide-react";
 import { signOut } from "next-auth/react";
 import { useState, useEffect } from "react";
 
 const navItems = [
   { label: "Dashboard",        href: "/dashboard/professor",               icon: LayoutDashboard },
   { label: "Announcements",    href: "/dashboard/professor/announcements",  icon: Megaphone },
+  { label: "Post Homework",    href: "/dashboard/professor/homework",       icon: FileText },
   { label: "Course Chat Hub",  href: "/dashboard/professor/chat",           icon: MessageSquare },
   { label: "Notifications",    href: "/dashboard/professor/notifications",  icon: Bell },
   { label: "Settings",         href: "/dashboard/professor/settings",       icon: Settings },
