@@ -25,6 +25,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         });
 
         if (user && user.passwordHash === credentials.password) {
+          if (!user.isActive) {
+            throw new Error("Your account has been deactivated by the administrator.");
+          }
           return { id: user.id, email: user.email, name: user.name, role: user.role };
         }
         return null;
