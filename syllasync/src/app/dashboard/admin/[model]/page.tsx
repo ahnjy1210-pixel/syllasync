@@ -13,9 +13,8 @@ const modelMap: Record<string, string> = {
   message: "message",
 };
 
-export default async function GenericModelViewer({ params }: { params: Promise<{ model: string }> }) {
-  const { model } = await params;
-  const modelName = modelMap[model];
+export default async function GenericModelViewer({ params }: { params: { model: string } }) {
+  const modelName = modelMap[params.model];
   
   if (!modelName || !(prisma as any)[modelName]) {
     notFound();
@@ -38,27 +37,9 @@ export default async function GenericModelViewer({ params }: { params: Promise<{
         await (prisma as any)[modelName].delete({
           where: { id },
         });
-        revalidatePath(`/dashboard/admin/${model}`);
+        revalidatePath(`/dashboard/admin/${params.model}`);
       } catch (error) {
         console.error("Failed to delete:", error);
-      }
-    }
-  }
-
-  // Server action to toggle active status
-  async function toggleStatus(formData: FormData) {
-    "use server";
-    const id = formData.get("id") as string;
-    const currentStatus = formData.get("currentStatus") === "true";
-    if (id && (modelName === "user" || modelName === "course")) {
-      try {
-        await (prisma as any)[modelName].update({
-          where: { id },
-          data: { isActive: !currentStatus }
-        });
-        revalidatePath(`/dashboard/admin/${model}`);
-      } catch (error) {
-        console.error("Failed to toggle:", error);
       }
     }
   }
@@ -66,20 +47,10 @@ export default async function GenericModelViewer({ params }: { params: Promise<{
   return (
     <div className="p-8 bg-st-light min-h-[calc(100vh-64px)]">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-st-dark capitalize">{model}s</h1>
-        <div className="flex items-center gap-4">
-          {model === "course" && (
-            <a 
-              href="/dashboard/professor/create" 
-              className="bg-st-lime text-st-indigo text-sm font-bold px-4 py-2 rounded-xl shadow-sm hover:brightness-95 transition-all"
-            >
-              + New Course
-            </a>
-          )}
-          <span className="bg-st-purple text-white text-sm px-3 py-1 rounded-full shadow-sm">
-            Total: {data.length}
-          </span>
-        </div>
+        <h1 className="text-3xl font-bold text-st-dark capitalize">{params.model}s</h1>
+        <span className="bg-st-purple text-white text-sm px-3 py-1 rounded-full shadow-sm">
+          Total: {data.length}
+        </span>
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
@@ -114,29 +85,20 @@ export default async function GenericModelViewer({ params }: { params: Promise<{
                       </td>
                     ))}
                     <td className="py-4 px-6 text-sm font-medium text-right">
-                      <div className="flex items-center justify-end gap-3">
-                        {(model === "user" || model === "course") && (
-                          <form action={toggleStatus}>
-                            <input type="hidden" name="id" value={row.id} />
-                            <input type="hidden" name="currentStatus" value={String(row.isActive)} />
-                            <button 
-                              type="submit" 
-                              className={row.isActive ? "text-yellow-600 hover:text-yellow-800 transition-colors" : "text-green-600 hover:text-green-800 transition-colors"}
-                            >
-                              {row.isActive ? "Deactivate" : "Activate"}
-                            </button>
-                          </form>
-                        )}
-                        <form action={deleteRecord}>
-                          <input type="hidden" name="id" value={row.id} />
-                          <button 
-                            type="submit" 
-                            className="text-red-500 hover:text-red-700 transition-colors"
-                          >
-                            Delete
-                          </button>
-                        </form>
-                      </div>
+                      <form action={deleteRecord}>
+                        <input type="hidden" name="id" value={row.id} />
+                        <button 
+                          type="submit" 
+                          className="text-red-500 hover:text-red-700 transition-colors"
+                          onClick={(e) => {
+                            if (!confirm("Are you sure you want to delete this record?")) {
+                              e.preventDefault();
+                            }
+                          }}
+                        >
+                          Delete
+                        </button>
+                      </form>
                     </td>
                   </tr>
                 ))}

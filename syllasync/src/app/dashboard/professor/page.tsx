@@ -15,7 +15,7 @@ export default async function ProfessorDashboard() {
   }
 
   const courses = await prisma.course.findMany({
-    where: { professorId: session.user.id, isActive: true },
+    where: { professorId: session.user.id },
     include: {
       _count: {
         select: { enrollments: true, lessons: true, homeworks: true }

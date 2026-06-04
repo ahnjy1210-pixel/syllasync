@@ -13,7 +13,6 @@ model User {
   passwordHash  String
   name          String
   role          String         // "PROFESSOR", "STUDENT", or "ADMIN"
-  isActive      Boolean        @default(true)
   avatar        String?
   coursesTaught Course[]       @relation("TaughtCourses")
   enrollments   Enrollment[]
@@ -36,7 +35,6 @@ model Course {
   enrollments   Enrollment[]
   messages      Message[]
   announcements Announcement[]
-  isActive      Boolean        @default(true)
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
 }

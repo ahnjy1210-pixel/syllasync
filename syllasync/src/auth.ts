@@ -16,7 +16,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (!credentials?.email || !credentials?.password) return null;
         
         // Super user bypass
-        if (credentials.email === "admin" && credentials.password === "SS3@woosong") {
+        if (credentials.email === "admin" && credentials.password === "adminss3") {
           return { id: "admin_id", email: "admin@syllasync.com", name: "System Admin", role: "ADMIN" };
         }
 
@@ -25,9 +25,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         });
 
         if (user && user.passwordHash === credentials.password) {
-          if (!user.isActive) {
-            throw new Error("Your account has been deactivated by the administrator.");
-          }
           return { id: user.id, email: user.email, name: user.name, role: user.role };
         }
         return null;

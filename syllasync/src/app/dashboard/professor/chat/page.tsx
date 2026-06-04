@@ -11,7 +11,7 @@ export default async function ChatHubPage() {
   if (!session?.user || (session.user as any).role !== "PROFESSOR") redirect("/login");
 
   const courses = await prisma.course.findMany({
-    where: { professorId: session.user.id as string, isActive: true },
+    where: { professorId: session.user.id as string },
     include: {
       _count: { select: { enrollments: true, messages: true } },
     },
