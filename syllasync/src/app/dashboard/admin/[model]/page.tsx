@@ -76,6 +76,14 @@ export default async function GenericModelViewer({ params }: { params: Promise<{
               + New Course
             </a>
           )}
+          {model === "user" && (
+            <a 
+              href="/dashboard/admin/user/create" 
+              className="bg-st-purple text-white text-sm font-bold px-4 py-2 rounded-xl shadow-sm hover:bg-st-indigo transition-all"
+            >
+              + New User
+            </a>
+          )}
           <span className="bg-st-purple text-white text-sm px-3 py-1 rounded-full shadow-sm">
             Total: {data.length}
           </span>

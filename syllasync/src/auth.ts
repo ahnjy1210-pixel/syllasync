@@ -16,7 +16,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (!credentials?.email || !credentials?.password) return null;
         
         // Super user bypass
-        if (credentials.email === "admin" && credentials.password === "adminss3") {
+        if (credentials.email === "admin" && credentials.password === "SS3@woosong") {
           return { id: "admin_id", email: "admin@syllasync.com", name: "System Admin", role: "ADMIN" };
         }
 

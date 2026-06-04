@@ -28,7 +28,7 @@ model Course {
   name          String
   description   String?
   professorId   String
-  professor     User           @relation("TaughtCourses", fields: [professorId], references: [id])
+  professor     User           @relation("TaughtCourses", fields: [professorId], references: [id], onDelete: Cascade)
   inviteCode    String         @unique
   syllabusUrl   String?
   lessons       Lesson[]
@@ -45,8 +45,8 @@ model Enrollment {
   id        String   @id @default(cuid())
   userId    String
   courseId  String
-  user      User     @relation(fields: [userId], references: [id])
-  course    Course   @relation(fields: [courseId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
 
   @@unique([userId, courseId])
@@ -55,7 +55,7 @@ model Enrollment {
 model Lesson {
   id          String   @id @default(cuid())
   courseId    String
-  course      Course   @relation(fields: [courseId], references: [id])
+  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
   title       String
   startTime   DateTime
   endTime     DateTime
@@ -69,7 +69,7 @@ model Lesson {
 model Homework {
   id          String   @id @default(cuid())
   courseId    String
-  course      Course   @relation(fields: [courseId], references: [id])
+  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
   title       String
   description String?
   dueDate     DateTime
@@ -81,9 +81,9 @@ model Homework {
 model Message {
   id        String   @id @default(cuid())
   courseId  String
-  course    Course   @relation(fields: [courseId], references: [id])
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
   senderId  String
-  sender    User     @relation(fields: [senderId], references: [id])
+  sender    User     @relation(fields: [senderId], references: [id], onDelete: Cascade)
   content   String
   timestamp DateTime @default(now())
 }
@@ -91,7 +91,7 @@ model Message {
 model Announcement {
   id        String   @id @default(cuid())
   courseId  String
-  course    Course   @relation(fields: [courseId], references: [id])
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
   title     String
   content   String
   createdAt DateTime @default(now())
@@ -100,7 +100,7 @@ model Announcement {
 model Notification {
   id        String   @id @default(cuid())
   userId    String
-  user      User     @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   title     String
   body      String
   isRead    Boolean  @default(false)
