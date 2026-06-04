@@ -69,12 +69,12 @@ export default function LoginPage() {
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Email Address</label>
                 <input
-                  type="email"
+                  type="text"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-st-purple/20 focus:border-st-purple outline-none transition-all placeholder:text-gray-400 text-st-dark"
-                  placeholder="name@wsu.ac.kr"
+                  placeholder="name@wsu.ac.kr or admin"
                 />
               </div>
 

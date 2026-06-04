@@ -2,16 +2,17 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { GraduationCap, LayoutDashboard, Megaphone, MessageSquare, Bell, Settings, LogOut, Menu, X } from "lucide-react";
+import { GraduationCap, LayoutDashboard, Megaphone, MessageSquare, Bell, Settings, LogOut, Menu, X, BookOpen } from "lucide-react";
 import { signOut } from "next-auth/react";
 import { useState, useEffect } from "react";
 
 const navItems = [
   { label: "Dashboard",        href: "/dashboard/professor",               icon: LayoutDashboard },
-  { label: "Announcements",    href: "/dashboard/professor/announcements",  icon: Megaphone },
-  { label: "Course Chat Hub",  href: "/dashboard/professor/chat",           icon: MessageSquare },
-  { label: "Notifications",    href: "/dashboard/professor/notifications",  icon: Bell },
-  { label: "Settings",         href: "/dashboard/professor/settings",       icon: Settings },
+  { label: "Course Editor",    href: "/dashboard/professor/course",        icon: BookOpen },
+  { label: "Announcements",    href: "/dashboard/professor/announcements", icon: Megaphone },
+  { label: "Course Chat",      href: "/dashboard/professor/chat",          icon: MessageSquare },
+  { label: "Notifications",    href: "/dashboard/professor/notifications", icon: Bell },
+  { label: "Settings",         href: "/dashboard/professor/settings",      icon: Settings },
 ];
 
 export default function ProfessorLayout({ children }: { children: React.ReactNode }) {
@@ -60,7 +61,7 @@ export default function ProfessorLayout({ children }: { children: React.ReactNod
         <div className="flex items-center justify-between p-6 border-b border-white/10">
           <Link href="/dashboard/professor" className="flex items-center gap-2">
             <GraduationCap className="h-7 w-7 text-st-lime" />
-            <span className="text-lg font-extrabold tracking-tight">SyllaSync</span>
+            <span className="text-lg font-extrabold tracking-tight">ScholarSync</span>
           </Link>
           <button onClick={() => setMobileOpen(false)} className="lg:hidden text-white/60 hover:text-white">
             <X className="h-5 w-5" />

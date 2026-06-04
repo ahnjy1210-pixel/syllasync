@@ -15,7 +15,10 @@ export default async function StudentDashboard() {
 
   // Fetch student's enrolled courses and upcoming homework
   const enrollments = await prisma.enrollment.findMany({
-    where: { userId: session.user.id },
+    where: { 
+      userId: session.user.id,
+      course: { isActive: true }
+    },
     include: {
       course: {
         include: {
@@ -47,7 +50,7 @@ export default async function StudentDashboard() {
           <div className="flex items-center justify-between h-16">
             <Link href="/" className="text-xl font-bold flex items-center gap-2 text-st-purple">
               <GraduationCap className="h-6 w-6 text-st-lime" />
-              SyllaSync
+              ScholarSync
             </Link>
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-3">

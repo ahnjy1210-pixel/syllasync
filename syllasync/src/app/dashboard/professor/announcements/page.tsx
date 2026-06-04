@@ -11,7 +11,7 @@ export default async function AnnouncementsPage() {
   if (!session?.user || (session.user as any).role !== "PROFESSOR") redirect("/login");
 
   const courses = await prisma.course.findMany({
-    where: { professorId: session.user.id as string },
+    where: { professorId: session.user.id as string, isActive: true },
     select: { id: true, name: true },
   });
 
